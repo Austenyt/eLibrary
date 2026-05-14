@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wassup, kniga! — Книга дня</title>
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --surface: #F9F9FB;
+            --border: #E8ECF0;
+            --primary: #FF6B35;
+            --primary-soft: #FF8F65;
+            --secondary: #3B8BEB;
+            --accent: #F5A623;
+            --accent-green: #27AE60;
+            --text: #2C3E50;
+            --text-muted: #7F8C8D;
+            --shadow-flat: 0px 4px 12px rgba(0,0,0,0.04);
+            --shadow-flat-hover: 0px 8px 22px rgba(0,0,0,0.08);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            line-height:1.6;
+            overflow-x:hidden;
+            font-weight:400;
+            display:flex;
+            flex-direction:column;
+            min-height:100vh;
+            position:relative;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
+
+        h1,h2,h3,.logo { font-family:'Inter Tight',sans-serif; font-weight:700; letter-spacing:-0.5px; }
+
+        .scroll-progress {
+            position:fixed; top:0; left:0; height:4px;
+            background:linear-gradient(to right, var(--primary), var(--secondary));
+            z-index:200; width:0;
+            box-shadow:0 0 8px rgba(255,107,53,0.4);
+        }
+
+        /* фон с падающими книгами */
+        .matrix-layer {
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            pointer-events:none; z-index:-1; overflow:hidden;
+        }
+        .falling-book {
+            position:absolute; top:-10%;
+            animation:fall linear infinite; opacity:0.18;
+            will-change:transform; display:flex; align-items:center; justify-content:center;
+            font-size:2rem;
+        }
+        @keyframes fall {
+            0% { transform:translateY(-10vh) rotate(0deg); }
+            100% { transform:translateY(110vh) rotate(360deg); }
+        }
+        .book-orange { color:var(--primary); }
+        .book-blue   { color:var(--secondary); }
+        .book-green  { color:var(--accent-green); }
+        .book-yellow { color:var(--accent); }
+        .book-gray   { color:#B0B8C1; opacity:0.12; }
+
+        /* хедер */
+        .header {
+            position:fixed; top:1rem; left:50%; transform:translateX(-50%);
+            width:min(92%,1200px); padding:0.8rem 2rem;
+            display:flex; justify-content:space-between; align-items:center;
+            z-index:100; background:rgba(255,255,255,0.95);
+            backdrop-filter:blur(8px); border:1px solid var(--border);
+            border-radius:100px; box-shadow:var(--shadow-flat);
+            transition:background 0.3s, box-shadow 0.3s;
+        }
+        .header.scrolled {
+            background:rgba(255,255,255,0.98);
+            box-shadow:0 8px 24px rgba(0,0,0,0.06);
+        }
+        .logo {
+            display:flex; align-items:center; gap:0.5rem;
+            font-size:1.5rem; color:var(--primary); text-decoration:none;
+        }
+        .logo-icon {
+            background:var(--primary); color:white; width:36px; height:36px;
+            border-radius:10px; display:flex; align-items:center; justify-content:center;
+            font-size:1.2rem;
+        }
+        .nav-links { display:flex; gap:1.5rem; list-style:none; flex-wrap:wrap; }
+        .nav-link {
+            text-decoration:none; color:var(--text-muted); font-weight:600;
+            font-size:0.9rem; padding:0.5rem 0.2rem; position:relative; transition:color 0.2s;
+        }
+        .nav-link::after {
+            content:''; position:absolute; bottom:0; left:0; width:0; height:3px;
+            background:var(--primary); border-radius:3px; transition:width 0.3s ease;
+        }
+        .nav-link.active, .nav-link:hover { color:var(--primary); }
+        .nav-link.active::after, .nav-link:hover::after { width:100%; }
+
+        /* пустой верх */
+        .hero-spacer {
+            height:100vh; display:flex; align-items:center; justify-content:center;
+            flex-direction:column; color:var(--text-muted); font-size:1.2rem;
+        }
+        .hero-spacer .scroll-hint { margin-top:2rem; animation:bounce 2s infinite; opacity:0.7; }
+        @keyframes bounce {
+            0%,20%,50%,80%,100% { transform:translateY(0); }
+            40% { transform:translateY(-10px); }
+            60% { transform:translateY(-5px); }
+        }
+
+        /* цитаты */
+        .quotes-section { max-width:900px; margin:5rem auto; padding:0 2rem; }
+        .quote-block {
+            margin:4rem 0; opacity:0; transition:opacity 0.8s ease, transform 0.8s ease;
+            display:flex;
+        }
+        .quote-block.left { transform:translateX(-120px); justify-content:flex-start; }
+        .quote-block.right { transform:translateX(120px); justify-content:flex-end; }
+        .quote-block.active { opacity:1; transform:translateX(0); }
+
+        .quote-card {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-lg); padding:1.8rem 2.2rem;
+            box-shadow:var(--shadow-flat); max-width:500px;
+            font-style:italic; font-size:1.3rem; color:var(--text);
+            position:relative;
+        }
+        .quote-card::before {
+            content:'“'; position:absolute; top:-0.6rem; left:1.2rem;
+            font-size:3rem; color:var(--primary); line-height:1; font-family:serif;
+        }
+
+        /* каталог (ряд книг) */
+        .catalog-section { max-width:1200px; margin:6rem auto; padding:0 2rem; }
+        .catalog-section h2 { font-size:2.2rem; margin-bottom:1.8rem; color:var(--text); text-align:center; }
+        .books-row {
+            display:flex; gap:1.5rem; flex-wrap:wrap; justify-content:center;
+        }
+        .book-mini {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-lg); overflow:hidden;
+            width:150px; text-align:center; box-shadow:var(--shadow-flat);
+            transition:transform 0.25s, box-shadow 0.25s; cursor:pointer;
+        }
+        .book-mini:hover { transform:translateY(-6px); box-shadow:var(--shadow-flat-hover); border-color:var(--primary); }
+        .book-mini img { width:100%; height:200px; object-fit:cover; background:#f0e6d8; }
+        .book-mini-info { padding:0.8rem 0.5rem; }
+        .book-mini-title { font-weight:700; font-size:0.9rem; margin-bottom:0.1rem; }
+        .book-mini-author { font-size:0.75rem; color:var(--text-muted); }
+
+        /* книга дня (детальная карточка) */
+        .book-day-section { max-width:1200px; margin:6rem auto; padding:0 2rem; }
+        .book-day-section h2 { font-size:2.2rem; margin-bottom:1.8rem; color:var(--text); text-align:center; }
+        .book-detail {
+            display:grid; grid-template-columns:300px 1fr; gap:2.5rem;
+            align-items:start; background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-xl); padding:2.5rem; box-shadow:var(--shadow-flat);
+        }
+        .book-cover-lg {
+            border-radius:var(--radius-xl); overflow:hidden;
+            box-shadow:var(--shadow-flat); aspect-ratio:2/3; background:#f0e6d8;
+        }
+        .book-cover-lg img { width:100%; height:100%; object-fit:cover; }
+        .book-info h1 {
+            font-size:2.4rem; font-weight:800; margin-bottom:1.5rem;
+            color:var(--text); letter-spacing:-1px;
+        }
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem 2rem; }
+        .info-item { display:flex; flex-direction:column; gap:0.3rem; }
+        .info-label { font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); }
+        .info-value { font-weight:500; }
+        .stars { color:var(--accent); letter-spacing:2px; }
+        .rating-badge {
+            background:var(--primary); color:white; border-radius:20px;
+            padding:0.2rem 0.8rem; font-weight:700; font-size:0.9rem; margin-left:0.4rem;
+        }
+        .full-width { grid-column:span 2; }
+
+        /* описание и похожие */
+        .description {
+            max-width:1200px; margin:3rem auto; padding:2.5rem 3rem;
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-xl); box-shadow:var(--shadow-flat);
+        }
+        .description h2 { font-size:2rem; margin-bottom:1.4rem; color:var(--text); }
+        .similar-books { max-width:1200px; margin:3rem auto; padding:0 1rem; }
+        .similar-books h2 { font-size:2rem; margin-bottom:2rem; text-align:center; }
+        .books-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.8rem;
+        }
+        .book-card {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius-lg); overflow:hidden; text-decoration:none;
+            color:var(--text); transition:transform 0.25s, box-shadow 0.25s;
+            box-shadow:var(--shadow-flat); cursor:pointer; display:flex; flex-direction:column;
+        }
+        .book-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-flat-hover); border-color:var(--primary); }
+        .book-card-img { width:100%; height:200px; object-fit:cover; background:#f3efe9; }
+        .book-card-info { padding:1rem; }
+        .book-card-title { font-weight:700; margin-bottom:0.2rem; color:var(--text); }
+        .book-card-author { font-size:0.85rem; color:var(--text-muted); }
+
+        .footer { text-align:center; padding:3rem; color:var(--text-muted); font-size:0.9rem; margin-top:auto; }
+
+        .reveal {
+            opacity:0; transform:translateY(35px);
+            transition:opacity 0.65s ease, transform 0.65s ease;
+        }
+        .reveal.active { opacity:1; transform:translateY(0); }
+
+        @media (max-width:768px) {
+            .header { padding:0.6rem 1.2rem; width:96%; border-radius:60px; top:0.8rem; }
+            .nav-links { gap:0.8rem; }
+            .book-detail { grid-template-columns:1fr; padding:1.5rem; }
+            .description { padding:2rem 1.5rem; margin:2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="matrix-layer" id="matrixLayer"></div>
+
+<header class="header" id="header">
+    <a href="#" class="logo">
+        <span class="logo-icon">📖</span> wassup, kniga!
+    </a>
+    <nav>
+        <ul class="nav-links">
+            <li><a href="#quotes" class="nav-link" data-section="quotes">Цитаты</a></li>
+            <li><a href="#catalog" class="nav-link" data-section="catalog">Каталог</a></li>
+            <li><a href="#book-day" class="nav-link active" data-section="book-day">Книга дня</a></li>
+            <li><a href="#desc" class="nav-link" data-section="desc">Описание</a></li>
+            <li><a href="#similar" class="nav-link" data-section="similar">Похожие</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <div class="hero-spacer">
+        <h2>📚 Добро пожаловать в мир книг</h2>
+        <div class="scroll-hint">↓ листай дальше ↓</div>
+    </div>
+
+    <section id="quotes" class="quotes-section">
+        <div class="quote-block left" data-quote><div class="quote-card">«Смотрю в книгу — вижу фигу»</div></div>
+        <div class="quote-block right" data-quote><div class="quote-card">«Так, стопэ. Тут же заначка была!...»</div></div>
+        <div class="quote-block left" data-quote><div class="quote-card">«Это он, по ходу, ручку расписывал?!»</div></div>
+        <div class="quote-block right" data-quote><div class="quote-card">«...мы тут все в переплет попали...»</div></div>
+        <div class="quote-block left" data-quote><div class="quote-card">«Абырвалг!!!»</div></div>
+    </section>
+
+    <section id="catalog" class="catalog-section">
+        <h2 class="reveal">📖 Каталог</h2>
+        <div class="books-row reveal" id="booksRow"></div>
+    </section>
+
+    <section id="book-day" class="book-day-section">
+        <h2 class="reveal">📚 Книга дня</h2>
+        <div class="book-detail reveal" id="bookDetail"></div>
+    </section>
+
+    <section id="desc" class="description reveal" id="descriptionSection"></section>
+
+    <section id="similar" class="similar-books">
+        <h2 class="reveal">📚 Похожие книги</h2>
+        <div class="books-grid">
+            <div class="book-card reveal"><img class="book-card-img" src="https://placehold.co/300x200/ddcbb6/2c2a33?text=Master+and+Margarita"><div class="book-card-info"><div class="book-card-title">Мастер и Маргарита</div><div class="book-card-author">Михаил Булгаков</div></div></div>
+            <div class="book-card reveal"><img class="book-card-img" src="https://placehold.co/300x200/e3d5c0/2c2a33?text=The+Name+of+the+Rose"><div class="book-card-info"><div class="book-card-title">Имя розы</div><div class="book-card-author">Умберто Эко</div></div></div>
+            <div class="book-card reveal"><img class="book-card-img" src="https://placehold.co/300x200/eddcca/2c2a33?text=Shadow+of+the+Wind"><div class="book-card-info"><div class="book-card-title">Тень ветра</div><div class="book-card-author">Карлос Руис Сафон</div></div></div>
+            <div class="book-card reveal"><img class="book-card-img" src="https://placehold.co/300x200/f0e1cf/2c2a33?text=House+of+Spirits"><div class="book-card-info"><div class="book-card-title">Дом духов</div><div class="book-card-author">Исабель Альенде</div></div></div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    © 2026 wassup, kniga! · Учебный пет-проект
+</footer>
+
+<script>
+    (function() {
+        // прогресс-бар и хедер
+        const progressBar = document.getElementById('scrollProgress');
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            if (progressBar) progressBar.style.width = Math.min(progress, 100) + '%';
+            if (header) header.classList.toggle('scrolled', scrollTop > 15);
+        });
+
+        // scroll spy
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        function setActiveNav() {
+            const scrollPos = window.scrollY + 120;
+            let current = '';
+            sections.forEach(section => {
+                if (section.offsetTop <= scrollPos) current = section.getAttribute('id');
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.section === current) link.classList.add('active');
+            });
+        }
+        window.addEventListener('scroll', setActiveNav);
+        setActiveNav();
+
+        // reveal-анимации
+        const revealItems = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -25px 0px' });
+        revealItems.forEach(el => revealObserver.observe(el));
+
+        // цитаты: выезжают и уезжают обратно
+        const quotes = document.querySelectorAll('[data-quote]');
+        const quoteObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                } else {
+                    entry.target.classList.remove('active');
+                }
+            });
+        }, { threshold: 0.2 });
+        quotes.forEach(q => quoteObserver.observe(q));
+
+        // данные книг и генерация книги дня
+        const books = [
+            {
+                title: "Сто лет одиночества",
+                author: "Габриэль Гарсиа Маркес",
+                year: 1967,
+                genre: "Магический реализм",
+                publisher: "Sudamericana / АСТ",
+                rating: 4.9,
+                awards: "Нобелевская премия (1982)",
+                isbn: "978-5-17-080115-9",
+                description: "Культовый роман, повествующий о семи поколениях семьи Буэндиа в вымышленном городе Макондо. Переплетение реальности и фантазии.",
+                cover: "https://placehold.co/400x600/e6dac7/4a3f6b?text=100+Years"
+            },
+            {
+                title: "Мастер и Маргарита",
+                author: "Михаил Булгаков",
+                year: 1967,
+                genre: "Роман, мистика",
+                publisher: "Молодая гвардия / Эксмо",
+                rating: 4.8,
+                awards: "Входит в список 100 лучших книг",
+                isbn: "978-5-699-43782-9",
+                description: "Сатирический роман о дьяволе, посетившем Москву, и о любви Мастера и Маргариты.",
+                cover: "https://placehold.co/400x600/ddcbb6/2c2a33?text=Master+and+Margarita"
+            },
+            {
+                title: "Имя розы",
+                author: "Умберто Эко",
+                year: 1980,
+                genre: "Исторический детектив",
+                publisher: "Bompiani / Corpus",
+                rating: 4.6,
+                awards: "Премия Стрега",
+                isbn: "978-5-17-084768-6",
+                description: "Интеллектуальный детектив о серии убийств в средневековом монастыре.",
+                cover: "https://placehold.co/400x600/e3d5c0/2c2a33?text=Name+of+the+Rose"
+            },
+            {
+                title: "Тень ветра",
+                author: "Карлос Руис Сафон",
+                year: 2001,
+                genre: "Мистический роман",
+                publisher: "Planeta / АСТ",
+                rating: 4.7,
+                awards: "Международный бестселлер",
+                isbn: "978-5-17-075494-4",
+                description: "История о забытых книгах, тайнах и любви в послевоенной Барселоне.",
+                cover: "https://placehold.co/400x600/eddcca/2c2a33?text=Shadow+of+the+Wind"
+            },
+            {
+                title: "Дом духов",
+                author: "Исабель Альенде",
+                year: 1982,
+                genre: "Магический реализм",
+                publisher: "Plaza & Janés / Азбука",
+                rating: 4.5,
+                awards: "Литературная премия Чили",
+                isbn: "978-5-389-20028-9",
+                description: "Семейная сага с элементами магии и исторических потрясений Чили.",
+                cover: "https://placehold.co/400x600/f0e1cf/2c2a33?text=House+of+Spirits"
+            },
+            {
+                title: "1984",
+                author: "Джордж Оруэлл",
+                year: 1949,
+                genre: "Антиутопия",
+                publisher: "Secker & Warburg / АСТ",
+                rating: 4.8,
+                awards: "Одна из важнейших книг XX века",
+                isbn: "978-5-17-080115-9",
+                description: "Мрачное будущее под тотальным контролем Большого Брата и идеологии ангсоца.",
+                cover: "https://placehold.co/400x600/cccccc/2c2a33?text=1984"
+            }
+        ];
+
+        const randomIndex = Math.floor(Math.random() * books.length);
+        const todayBook = books[randomIndex];
+
+        // каталог (ряд книг)
+        const booksRow = document.getElementById('booksRow');
+        booksRow.innerHTML = books.map((b, idx) => `
+            <div class="book-mini ${idx === randomIndex ? 'active' : ''}" style="border-color: ${idx === randomIndex ? 'var(--primary)' : ''}">
+                <img src="${b.cover.replace('400x600','200x280')}" alt="${b.title}">
+                <div class="book-mini-info">
+                    <div class="book-mini-title">${b.title}</div>
+                    <div class="book-mini-author">${b.author}</div>
+                </div>
+            </div>
+        `).join('');
+
+        // книга дня (детальная карточка)
+        const bookDetail = document.getElementById('bookDetail');
+        bookDetail.innerHTML = `
+            <div class="book-cover-lg"><img src="${todayBook.cover}" alt="Обложка"></div>
+            <div class="book-info">
+                <h1>${todayBook.title}</h1>
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Автор</span><span class="info-value">${todayBook.author}</span></div>
+                    <div class="info-item"><span class="info-label">Жанр</span><span class="info-value">${todayBook.genre}</span></div>
+                    <div class="info-item"><span class="info-label">Год выпуска</span><span class="info-value">${todayBook.year}</span></div>
+                    <div class="info-item"><span class="info-label">Издательство</span><span class="info-value">${todayBook.publisher}</span></div>
+                    <div class="info-item"><span class="info-label">Рейтинг</span><span class="info-value"><span class="stars">★★★★★</span><span class="rating-badge">${todayBook.rating}</span></span></div>
+                    <div class="info-item"><span class="info-label">Награды</span><span class="info-value">🏆 ${todayBook.awards}</span></div>
+                    <div class="info-item full-width"><span class="info-label">ISBN</span><span class="info-value">${todayBook.isbn}</span></div>
+                </div>
+            </div>
+        `;
+
+        // описание
+        const descriptionSection = document.getElementById('desc');
+        descriptionSection.innerHTML = `
+            <h2>📘 Описание</h2>
+            <p><strong>«${todayBook.title}»</strong> — ${todayBook.description}</p>
+        `;
+
+        // матричный фон
+        const matrixLayer = document.getElementById('matrixLayer');
+        const bookIcons = ['📕','📗','📘','📙','📖','📚','📓','📒','🔖'];
+        const colorClasses = ['book-orange','book-blue','book-green','book-yellow','book-gray'];
+        for (let i=0; i<40; i++) {
+            const icon = bookIcons[Math.floor(Math.random()*bookIcons.length)];
+            const el = document.createElement('div');
+            el.className = `falling-book ${colorClasses[Math.floor(Math.random()*colorClasses.length)]}`;
+            el.textContent = icon;
+            const left = Math.random()*100;
+            const size = 1.8 + Math.random()*2.5;
+            const duration = 8 + Math.random()*15;
+            const delay = Math.random() * -20;
+            el.style.left = left+'%';
+            el.style.fontSize = size+'rem';
+            el.style.animationDuration = duration+'s';
+            el.style.animationDelay = delay+'s';
+            matrixLayer.appendChild(el);
+        }
+    })();
+</script>
+</body>
+</html>
