@@ -8,18 +8,8 @@ class BookService:
     def get_all(self, session):
         return session.scalars(select(Book)).all()
 
-    def create(self, name, author, genre, year, publisher, rating, award, isbn, description, session):
-        book = Book(
-            name=name,
-            author=author,
-            genre=genre,
-            year=year,
-            publisher=publisher,
-            rating=rating,
-            award=award,
-            isbn=isbn,
-            description=description,
-        )
+    def create(self, payload, session):
+        book = Book(**payload.model_dump())
         session.add(book)
         session.commit()
         session.refresh(book)

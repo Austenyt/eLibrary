@@ -7,3 +7,5 @@ class Config(BaseSettings):
 
 
 config = Config()
+
+DATABASE_URL = 'sqlite:///./eLibrary.db'

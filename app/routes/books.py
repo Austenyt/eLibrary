@@ -21,8 +21,7 @@ def find(payload: BookFind, session=Depends(get_session)):
 
 @books_router.post('/books')
 def create(payload: BookCreate, session=Depends(get_session)):
-    book_service.create(payload.name, payload.author, payload.genre, payload.year, payload.publisher, payload.rating,
-                        payload.award, payload.isbn, payload.description, session)
+    book_service.create(payload, session)
     return {"message": "Книга успешно добавлена!"}
 
 

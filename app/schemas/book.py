@@ -7,7 +7,6 @@ class BookFind(BaseModel):
 
 
 class BookCreate(BaseModel):
-    id: int
     name: str
     author: str
     genre: str
