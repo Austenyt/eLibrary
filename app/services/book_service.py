@@ -22,7 +22,9 @@ class BookService:
         return book
 
     def patch(self, payload, session):
-        session.execute(update(Book).where(Book.id == payload.id).values(**payload))
+        session.execute(
+            update(Book).where(Book.id == payload.id).values(**payload.model_dump(exclude={'id'}, exclude_unset=True))
+        )
         session.commit()
 
     def delete(self, id, session):
