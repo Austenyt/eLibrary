@@ -18,7 +18,7 @@ class BookService:
     def find(self, id, session):
         book = session.get(Book, id)
         if book is None:
-            return ValueError("Книга не найдена")
+            raise ValueError("Книга не найдена")
         return book
 
     def patch(self, payload, session):

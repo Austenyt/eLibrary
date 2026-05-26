@@ -21,8 +21,9 @@ def find(payload: BookFind, session=Depends(get_session)):
 
 @books_router.post('/books')
 def create(payload: BookCreate, session=Depends(get_session)):
-    book_service.create(payload, session)
-    return {"message": "Книга успешно добавлена!"}
+    book = book_service.create(payload, session)
+    print(book.id)
+    return {"message": f"Книга c id {book.id} успешно добавлена!"}
 
 
 @books_router.patch('/books/{id}')
@@ -35,5 +36,6 @@ def patch(payload: BookPatch, session=Depends(get_session)):
 def delete(payload: BookFind, session=Depends(get_session)):
     try:
         book_service.delete(payload.id, session)
+        return {"message": "Книга удалена успешно"}
     except ValueError:
         return {"message": "Книги с таким id не существует"}
