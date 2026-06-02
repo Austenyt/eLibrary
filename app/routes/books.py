@@ -22,7 +22,6 @@ def find(payload: BookFind, session=Depends(get_session)):
 @books_router.post('/books')
 def create(payload: BookCreate, session=Depends(get_session)):
     book = book_service.create(payload, session)
-    print(book.id)
     return {"message": f"Книга c id {book.id} успешно добавлена!"}
 
 
